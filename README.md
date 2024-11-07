@@ -1,5 +1,7 @@
 # Script Launcher - Docs Viewer
 
+[![wakatime](https://wakatime.com/badge/user/8ef73281-6d0a-4758-af11-fd880ca3009c/project/3dc409b1-fee3-42db-b346-3d2dcc445be9.svg?style=for-the-badge)](https://wakatime.com/badge/user/8ef73281-6d0a-4758-af11-fd880ca3009c/project/3dc409b1-fee3-42db-b346-3d2dcc445be9)
+
 ## Descripción
 
 Este proyecto implementa una interfaz gráfica en Python, utilizando la biblioteca `tkinter`, para ejecutar scripts y mostrar documentación asociada. La aplicación permite al usuario seleccionar y ejecutar scripts de Python (`.py`) y ejecutables (`.exe`), además de visualizar archivos README.md en HTML dentro de la interfaz.
