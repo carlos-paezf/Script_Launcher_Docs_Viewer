@@ -213,7 +213,7 @@ class ViewHandler(tk.Tk):
         The function `create_sidemenu` creates radio buttons in a tkinter side menu based on scripts
         found in a directory.
         """
-        scripts = self.script_handler.find_scripts('C:\\Users\\carlo\\Documents\\BANREP_GitHub\\python-scripts')
+        scripts = self.script_handler.find_scripts('./')
 
         for script in scripts:
             folder_name = Path(script).parent.name
