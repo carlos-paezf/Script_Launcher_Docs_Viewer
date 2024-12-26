@@ -5,6 +5,7 @@ import threading
 import tkinter as tk
 import webbrowser
 
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from tkhtmlview import HTMLLabel
 
@@ -162,34 +163,55 @@ class ScriptHandler():
     
 
     def generate_executables(self, html_label):
+        """
+        The `generate_executables` function compiles Python scripts into standalone executables using
+        PyInstaller and updates an HTML label with the results.
+        
+        :param html_label: The code you provided is a method that generates executable files from Python
+        scripts using PyInstaller. It searches for Python scripts in the current directory, compiles
+        them into standalone executables, and then updates an HTML label with the results of the
+        compilation process
+        """
         directory_path = Path('./')
         scripts = [
             path for path in directory_path.rglob("*.py")
             if "venv" not in str(path) and "__pycache__" not in str(path)
         ]
 
-        for script in scripts:
+        scripts_to_generate = [script for script in scripts if not script.with_suffix('.exe').exists()]
+
+        def compile_script(script):
+            """
+            The function `compile_script` compiles a Python script into a standalone executable using
+            PyInstaller and returns a message indicating success or failure.
+            
+            :param script: The `compile_script` function takes a script file as input and compiles it
+            into an executable file using PyInstaller. The script file is provided as the `script`
+            parameter
+            :return: The function `compile_script(script)` returns a string message indicating whether
+            the executable file was successfully generated or if there was an error during the process.
+            If the executable file is successfully generated, it returns a message in the format:
+            "<p>Generado: {exe_path}</p>". If there is an error during the generation process, it
+            returns a message in the format: "<h1>Error al
+            """
             exe_path = script.with_suffix('.exe')
 
-            if not exe_path.exists():
-                try:
-                    subprocess.run(
-                        ['pyinstaller', '--onefile', '--noconsole', str(script)],
-                        check=True, creationflags=subprocess.CREATE_NEW_CONSOLE
-                    )
-                    dist_path = Path('./dist') / script.stem
-                    if dist_path.exists():
-                        shutil.move(dist_path, exe_path)
-                        html_label.set_html(f"<p>Generado: {exe_path}</p>")
-                except subprocess.CalledProcessError as exception:
-                    html_label.set_html(
-                        f'''
-                        <h1>Error al generar el ejecutable para {script}:</h1>
-                        <pre>{exception}</pre>
-                        <p>Consulta la consola para más información</p>
-                        '''
-                    )
-
+            try:
+                subprocess.run(
+                    ['pyinstaller', '--onefile', '--noconsole', str(script)],
+                    check=True, creationflags=subprocess.CREATE_NEW_CONSOLE
+                )
+                dist_path = Path('./dist') / script.stem
+                if dist_path.exists():
+                    shutil.move(dist_path, exe_path)
+                return f"<p>Generado: {exe_path}</p>"
+            except subprocess.CalledProcessError as exception:
+                return f"<h1>Error al generar el ejecutable para {script}: {exception}"
+            
+        with ThreadPoolExecutor(max_workers=4) as executor:
+            results = executor.map(compile_script, scripts_to_generate)
+        
+        html_label.set_html("<br>".join(results))
 
 
 # The `ViewHandler` class creates a GUI window with a side menu for executing scripts and displaying
