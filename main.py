@@ -1,5 +1,6 @@
 import markdown
 import subprocess
+import shutil
 import threading
 import tkinter as tk
 import webbrowser
@@ -100,12 +101,16 @@ class ScriptHandler():
         min_depth = 1
         max_depth = 2
 
-        return [
-            str(path)
-            for path in directory_path.rglob('*')
-            if path.suffix in {'.py', '.exe'}
-            and min_depth < len(path.relative_to(directory_path).parts) <= max_depth
-        ]
+        scripts = {}
+
+        for path in directory_path.rglob('*'):
+            if min_depth < len(path.relative_to(directory_path).parts) <= max_depth:
+                if path.suffix  == '.exe':
+                    scripts[path.parent] = path
+                elif path.suffix == '.py' and path.parent not in scripts:
+                    scripts[path.parent] = path
+
+        return [str(path) for path in scripts.values()]
 
 
     def show_readme(self, script_path, html_label):
@@ -154,7 +159,7 @@ class ScriptHandler():
             html_text = markdown.markdown(markdown_text)
             self.readme_cache[readme_path] = html_text
         return html_text
-
+    
 
 
 # The `ViewHandler` class creates a GUI window with a side menu for executing scripts and displaying
