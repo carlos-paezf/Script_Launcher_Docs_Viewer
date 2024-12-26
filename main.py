@@ -1,10 +1,11 @@
 import markdown
-import subprocess  
+import subprocess
+import threading
 import tkinter as tk
 import webbrowser
 
-from tkhtmlview import HTMLLabel
 from pathlib import Path
+from tkhtmlview import HTMLLabel
 
 
 # The `ScriptHandler` class provides methods to run Python or executable scripts, find scripts in
@@ -60,21 +61,25 @@ class ScriptHandler():
         execution of scripts. When an error occurs during the execution of a script, the `html_label` is
         updated with an
         """
-        try:
-            if script_path.endswith('py'):
-                subprocess.run(['python', script_path], check=True)
-            elif script_path.endswith('exe'):
-                subprocess.run([script_path], check=True)
-            else:
-                html_label.set_html("<h1>Por favor, selecciona un script para realizar la ejecución</h1>")
-        except subprocess.CalledProcessError as exception:
-            html_label.set_html(
-                f'''
-                <h1>Error al ejecutar el script:</h1>
-                <pre>{exception}</pre>
-                <p>Consulta la consola para más información</p>
-                '''
-            )
+        def script_execution():
+            try:
+                if script_path.endswith('py'):
+                    subprocess.run(['python', script_path], check=True, creationflags=subprocess.CREATE_NEW_CONSOLE)
+                elif script_path.endswith('exe'):
+                    subprocess.run([script_path], check=True, creationflags=subprocess.CREATE_NEW_CONSOLE)
+                else:
+                    html_label.set_html("<h1>Por favor, selecciona un script para realizar la ejecución</h1>")
+            except subprocess.CalledProcessError as exception:
+                html_label.set_html(
+                    f'''
+                    <h1>Error al ejecutar el script:</h1>
+                    <pre>{exception}</pre>
+                    <p>Consulta la consola para más información</p>
+                    '''
+                )
+        
+        script_thread = threading.Thread(target=script_execution, daemon=True)
+        script_thread.start()
         
 
     def find_scripts(self, directory: str):
