@@ -161,6 +161,36 @@ class ScriptHandler():
         return html_text
     
 
+    def generate_executables(self, html_label):
+        directory_path = Path('./')
+        scripts = [
+            path for path in directory_path.rglob("*.py")
+            if "venv" not in str(path) and "__pycache__" not in str(path)
+        ]
+
+        for script in scripts:
+            exe_path = script.with_suffix('.exe')
+
+            if not exe_path.exists():
+                try:
+                    subprocess.run(
+                        ['pyinstaller', '--onefile', '--noconsole', str(script)],
+                        check=True, creationflags=subprocess.CREATE_NEW_CONSOLE
+                    )
+                    dist_path = Path('./dist') / script.stem
+                    if dist_path.exists():
+                        shutil.move(dist_path, exe_path)
+                        html_label.set_html(f"<p>Generado: {exe_path}</p>")
+                except subprocess.CalledProcessError as exception:
+                    html_label.set_html(
+                        f'''
+                        <h1>Error al generar el ejecutable para {script}:</h1>
+                        <pre>{exception}</pre>
+                        <p>Consulta la consola para más información</p>
+                        '''
+                    )
+
+
 
 # The `ViewHandler` class creates a GUI window with a side menu for executing scripts and displaying
 # documentation.
@@ -258,6 +288,16 @@ class ViewHandler(tk.Tk):
             font=("Arial", 10)
         )
         readme_button.pack(pady=(0, 5))
+
+        generate_exe_button = tk.Button(
+            bottom_frame,
+            text="Generar Ejecutables",
+            command=lambda: self.script_handler.generate_executables(self.html_label),
+            bg="#34495e",
+            fg="white",
+            font=("Arial", 10)
+        )
+        generate_exe_button.pack(pady=(0, 5))
 
         github_button = tk.Button(
             bottom_frame,
